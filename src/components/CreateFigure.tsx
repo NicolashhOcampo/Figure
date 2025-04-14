@@ -1,4 +1,4 @@
-import { JSX, useRef, useState } from "react"
+import React, { JSX, useRef, useState } from "react"
 
 
 interface Figure {
@@ -22,8 +22,8 @@ export const CreateFigure = () => {
           grid.push(
             <div
               key={`${indexRow}-${indexCol}`}
-              className={`w-10 h-10  ${
-                square ? 'bg-amber-500 border border-gray-900' : 'bg-white'
+              className={`w-10 h-10 border ${
+                square ? 'bg-amber-500 border-gray-900' : 'bg-white border-transparent'
               }`}
             />
           );
@@ -34,6 +34,7 @@ export const CreateFigure = () => {
       return (
         <div
           draggable = {true}
+          onDragStart={startDrag}
           className={`grid gap-1 w-max h-max`}
           style={{
             gridTemplateColumns: `repeat(${figure.size.w}, 2.5rem)`,
@@ -42,6 +43,19 @@ export const CreateFigure = () => {
           {grid}
         </div>
       );
+    }
+
+    const Table = () => {
+      return (
+        <div className="border w-full h-full">
+
+        </div>
+      )
+    }
+
+    const startDrag = (event:React.DragEvent) => {
+      event.target
+      console.log(event.target)
     }
 
     const handleClickSquare = (indexRow:number,index:number) =>{
@@ -120,8 +134,8 @@ export const CreateFigure = () => {
     console.log("Figures: ", figures)
 
   return (
-    <div className="flex w-full p-5">
-      <div className="border flex flex-col items-center p-2 w-100 h-160 overflow-auto ">
+    <div className="grid-container w-full p-5">
+      <section className="border m-auto flex flex-col items-center p-2 w-9/10 h-160 overflow-auto " style={{gridArea: "figure"}}>
         <ul className="w-full flex flex-col">
           {figures.map((figure, index) => (
             <li key={index} className={`mt-10 p-0 m-0 flex items-center justify-center`}>
@@ -129,14 +143,14 @@ export const CreateFigure = () => {
             </li>
           ))}
         </ul>
-      </div>
+      </section>
 
-      <div className="basis-full mt-2 flex flex-col items-center gap-4">
-        <div className="grid grid-cols-5 w-55 h-55 gap-1">
+      <section className="w-full h-full mt-2 flex flex-col items-center gap-4" style={{gridArea: "create"}}>
+        <div className="grid grid-cols-5 w-max h-max gap-1">
           {squares.map((squareRow, indexRow)=>(
             squareRow.map((square, index)  => {
               return (
-                <div key={`${indexRow}-${index}`} onClick={() => handleClickSquare(indexRow, index)} className={`border border-solid w-10 h-10 border-gray-900 ${square && "bg-amber-500"}`}>
+                <div key={`${indexRow}-${index}`} onClick={() => handleClickSquare(indexRow, index)} className={`border w-10 h-10 border-gray-900 ${square && "bg-amber-500"}`}>
                 </div>
               )
             })
@@ -144,8 +158,10 @@ export const CreateFigure = () => {
           ))} 
         </div>
         <button onClick={handleCreateFigure}>Crear</button>
-      </div>
-      
+      </section>
+      <section className="w-full h-full" style={{gridArea: "table"}}>
+        <Table />
+      </section>
     </div>
     
   )

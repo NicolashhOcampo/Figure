@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+
+.grid-container {
+    display: grid;
+    grid-template-areas: 
+    "figure create"
+    "figure table"
+    ;
+
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: 300px 1fr;
+}
