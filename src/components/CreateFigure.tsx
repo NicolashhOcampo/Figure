@@ -11,23 +11,27 @@ interface Figure {
 
 export const CreateFigure = () => {
   const falseSquares = useRef(Array.from({ length: 5 }, () => Array(5).fill(false)))
+  const activeFigure = useRef<Figure>(null)
   const [squares, setSquares] = useState<Array<Array<boolean>>>(falseSquares.current)
   const [tableSquare, setTableSquare] = useState<Array<Array<boolean>>>(falseSquares.current)
   const [figures, setFigures] = useState<Figure[]>([])
 
-
+  console.log("Render")
 
   const Figure = ({ figure }: { figure: Figure }) => {
     const grid: JSX.Element[] = [];
 
     const startDrag = (event: React.DragEvent) => {
-      //event.preventDefault()
-      event.dataTransfer.setData("aplication/json", JSON.stringify(figure))
+      event.dataTransfer.setData("application/json", JSON.stringify(figure))
+
+      activeFigure.current = figure
       console.log(event.target)
     }
 
     const endDrag = (event: React.DragEvent) => {
       event.preventDefault()
+
+      activeFigure.current = null
       console.log("End")
     }
 
@@ -63,14 +67,12 @@ export const CreateFigure = () => {
 
     const insertFigure = (figure: Figure, y:number, x:number) => {
 
-      console.log(figure)
-
       setTableSquare(prev => {
         const newTableSquares =structuredClone(prev)
 
         figure.squares.forEach((squareRow, indexRow) => {
           squareRow.forEach((square, indexCol) => {
-            if (square){
+            if (square && newTableSquares.length > (indexRow + y) && newTableSquares[0].length > (indexCol + x)){
               console.log("square en ", indexRow + y, indexCol + x)
               newTableSquares[indexRow + y][indexCol + x] = true
             }
@@ -83,15 +85,25 @@ export const CreateFigure = () => {
 
     const handleDrop = (event: React.DragEvent, y:number, x:number) => {
       event.preventDefault()
-      const data = JSON.parse(event.dataTransfer.getData("aplication/json"))
 
-      insertFigure(data, y, x)
+      if (activeFigure.current){
+        insertFigure(activeFigure.current, y, x)
+      }
+      
       console.log("drop en ", x, y)
     }
   
-    const handleDragOver = (event: React.DragEvent) => {
+    const handleDragOver = (event: React.DragEvent, y:number, x:number) => {
       event.preventDefault()
-      //console.log("Over")
+      
+
+    }
+
+    const handleDragLeave = (event: React.DragEvent, y:number, x:number) => {
+      event.preventDefault()
+      console.log("Leave")
+      
+      
     }
 
     return (
@@ -100,8 +112,12 @@ export const CreateFigure = () => {
           {tableSquare.map((squareRow, indexRow) => (
             squareRow.map((square, index) => {
               return (
-                <div key={`${indexRow}-${index}`} onDrop={(e) => handleDrop(e, indexRow, index)} onDragOver={handleDragOver} className={`border w-10 h-10 border-gray-900 ${square && "bg-amber-500"}`}>
-                </div>
+                <div 
+                key={`${indexRow}-${index}`} 
+                onDrop={(e) => handleDrop(e, indexRow, index)} 
+                onDragOver={(e) => handleDragOver(e, indexRow, index)} 
+                onDragLeave={(e) => handleDragLeave(e, indexRow, index)}
+                className={`border w-10 h-10 border-gray-900 ${square && "bg-amber-500"}`} />
               )
             })
 
@@ -122,8 +138,10 @@ export const CreateFigure = () => {
   }
 
   const handleCreateFigure = () => {
-    createFigure()
-    resetSquares()
+    if (squares.some(squareRow => squareRow.some(square => square))){
+      createFigure()
+      resetSquares()
+    }
 
   }
 
