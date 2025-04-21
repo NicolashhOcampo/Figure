@@ -9,11 +9,20 @@ interface Figure {
   }
 }
 
+type TableProps = {
+  tableSquare: Array<Array<boolean>>,
+  setTableSquare: React.Dispatch<React.SetStateAction<boolean[][]>>,
+  previewSquares: Array<Array<boolean>>,
+  setPreviewSquares: React.Dispatch<React.SetStateAction<boolean[][]>>
+}
+
 export const CreateFigure = () => {
-  const falseSquares = useRef(Array.from({ length: 5 }, () => Array(5).fill(false)))
-  const activeFigure = useRef<Figure>(null)
+  const falseSquares = useRef<Array<Array<boolean>>>(Array.from({ length: 5 }, () => Array(5).fill(false)))
+  const activeFigure = useRef<Figure | null>(null)
   const [squares, setSquares] = useState<Array<Array<boolean>>>(falseSquares.current)
   const [tableSquare, setTableSquare] = useState<Array<Array<boolean>>>(falseSquares.current)
+  const [previewSquares, setPreviewSquares] = useState<Array<Array<boolean>>>(falseSquares.current)
+  const lastPreviewPosition = useRef<{x: number|null, y:number|null}>({x: null, y:null})
   const [figures, setFigures] = useState<Figure[]>([])
 
   console.log("Render")
@@ -63,16 +72,16 @@ export const CreateFigure = () => {
     );
   }
 
-  const Table = ({tableSquare, setTableSquare}:{tableSquare:Array<Array<boolean>>, setTableSquare:React.Dispatch<React.SetStateAction<boolean[][]>>}) => {
+  const Table = ({ tableSquare, setTableSquare, previewSquares, setPreviewSquares }: TableProps) => {
 
-    const insertFigure = (figure: Figure, y:number, x:number) => {
+    const insertFigure = (figure: Figure, y: number, x: number) => {
 
       setTableSquare(prev => {
-        const newTableSquares =structuredClone(prev)
+        const newTableSquares = structuredClone(prev)
 
         figure.squares.forEach((squareRow, indexRow) => {
           squareRow.forEach((square, indexCol) => {
-            if (square && newTableSquares.length > (indexRow + y) && newTableSquares[0].length > (indexCol + x)){
+            if (square && newTableSquares.length > (indexRow + y) && newTableSquares[0].length > (indexCol + x)) {
               console.log("square en ", indexRow + y, indexCol + x)
               newTableSquares[indexRow + y][indexCol + x] = true
             }
@@ -83,41 +92,65 @@ export const CreateFigure = () => {
       })
     }
 
-    const handleDrop = (event: React.DragEvent, y:number, x:number) => {
+    const insertPreview = (figure: Figure, y: number, x: number) => {
+
+      if (y === lastPreviewPosition.current.y && x === lastPreviewPosition.current.x) return
+
+      lastPreviewPosition.current = {x:x, y:y}
+
+      setPreviewSquares(() => {
+        const newTableSquares = structuredClone(falseSquares.current)
+
+        figure.squares.forEach((squareRow, indexRow) => {
+          squareRow.forEach((square, indexCol) => {
+            if (square && newTableSquares.length > (indexRow + y) && newTableSquares[0].length > (indexCol + x)) {
+              console.log("square en ", indexRow + y, indexCol + x)
+              newTableSquares[indexRow + y][indexCol + x] = true
+            }
+          })
+        })
+
+        return newTableSquares
+      })
+    }
+
+    const handleDrop = (event: React.DragEvent, y: number, x: number) => {
       event.preventDefault()
 
-      if (activeFigure.current){
+      if (activeFigure.current) {
+        setPreviewSquares(falseSquares.current)
         insertFigure(activeFigure.current, y, x)
       }
-      
+
       console.log("drop en ", x, y)
     }
-  
-    const handleDragOver = (event: React.DragEvent, y:number, x:number) => {
-      event.preventDefault()
-      
 
+    const handleDragOver = (event: React.DragEvent, y: number, x: number) => {
+      event.preventDefault()
+      if (activeFigure.current) {
+        insertPreview(activeFigure.current, y, x)
+        
+      }
     }
 
-    const handleDragLeave = (event: React.DragEvent, y:number, x:number) => {
+    const handleDragLeave = (event: React.DragEvent) => {
       event.preventDefault()
       console.log("Leave")
-      
-      
+
     }
 
     return (
-      <div  className="border bg-green-300 w-full h-full flex items-center justify-center">
-          <div className="grid grid-cols-5 w-max h-max gap-1">
+      <div className="border bg-green-300 w-full h-full flex items-center justify-center">
+        <div className="grid grid-cols-5 w-max h-max gap-1">
           {tableSquare.map((squareRow, indexRow) => (
-            squareRow.map((square, index) => {
+            squareRow.map((square, indexCol) => {
               return (
-                <div 
-                key={`${indexRow}-${index}`} 
-                onDrop={(e) => handleDrop(e, indexRow, index)} 
-                onDragOver={(e) => handleDragOver(e, indexRow, index)} 
-                onDragLeave={(e) => handleDragLeave(e, indexRow, index)}
-                className={`border w-10 h-10 border-gray-900 ${square && "bg-amber-500"}`} />
+                <div
+                  key={`${indexRow}-${indexCol}`}
+                  onDrop={(e) => handleDrop(e, indexRow, indexCol)}
+                  onDragOver={(e) => handleDragOver(e, indexRow, indexCol)}
+                  onDragLeave={(e) => handleDragLeave(e)}
+                  className={`border w-10 h-10 border-gray-900 ${square? "bg-amber-500" : previewSquares[indexRow][indexCol] && "bg-amber-200"} ${square && previewSquares[indexRow][indexCol] && "bg-red-600"}`} />
               )
             })
 
@@ -138,7 +171,7 @@ export const CreateFigure = () => {
   }
 
   const handleCreateFigure = () => {
-    if (squares.some(squareRow => squareRow.some(square => square))){
+    if (squares.some(squareRow => squareRow.some(square => square))) {
       createFigure()
       resetSquares()
     }
@@ -234,7 +267,12 @@ export const CreateFigure = () => {
         <button onClick={handleCreateFigure}>Crear</button>
       </section>
       <section className="w-full h-full" style={{ gridArea: "table" }}>
-        <Table tableSquare={tableSquare} setTableSquare={setTableSquare}/>
+        <Table
+          tableSquare={tableSquare}
+          setTableSquare={setTableSquare}
+          previewSquares={previewSquares}
+          setPreviewSquares={setPreviewSquares}
+        />
       </section>
     </div>
 
