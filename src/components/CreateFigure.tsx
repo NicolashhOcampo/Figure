@@ -41,6 +41,7 @@ export const CreateFigure = () => {
       event.preventDefault()
 
       activeFigure.current = null
+      setPreviewSquares(falseSquares.current)
       console.log("End")
     }
 
@@ -48,6 +49,9 @@ export const CreateFigure = () => {
       squaresRow.forEach((square, indexCol) => {
         grid.push(
           <div
+            draggable={square}
+            onDragStart={startDrag}
+            onDragEnd={endDrag}
             key={`${indexRow}-${indexCol}`}
             className={`w-10 h-10 border ${square ? 'bg-amber-500 border-gray-900' : 'bg-white border-transparent'
               }`}
@@ -59,9 +63,6 @@ export const CreateFigure = () => {
 
     return (
       <div
-        draggable={true}
-        onDragStart={startDrag}
-        onDragEnd={endDrag}
         className={`grid gap-1 w-max h-max`}
         style={{
           gridTemplateColumns: `repeat(${figure.size.w}, 2.5rem)`,
@@ -135,6 +136,7 @@ export const CreateFigure = () => {
 
     const handleDragLeave = (event: React.DragEvent) => {
       event.preventDefault()
+      setPreviewSquares(falseSquares.current)
       console.log("Leave")
 
     }
