@@ -41,7 +41,7 @@ export const CreateFigure = () => {
       event.preventDefault()
 
       activeFigure.current = null
-      setPreviewSquares(falseSquares.current)
+      resetPreview()
       console.log("End")
     }
 
@@ -95,7 +95,8 @@ export const CreateFigure = () => {
 
     const insertPreview = (figure: Figure, y: number, x: number) => {
 
-      if (y === lastPreviewPosition.current.y && x === lastPreviewPosition.current.x) return
+      console.log(lastPreviewPosition.current.y, lastPreviewPosition.current.x)
+      if ((lastPreviewPosition.current.y !== null || lastPreviewPosition.current.x !== null) || (y === lastPreviewPosition.current.y && x === lastPreviewPosition.current.x)) return
 
       lastPreviewPosition.current = {x:x, y:y}
 
@@ -105,7 +106,6 @@ export const CreateFigure = () => {
         figure.squares.forEach((squareRow, indexRow) => {
           squareRow.forEach((square, indexCol) => {
             if (square && newTableSquares.length > (indexRow + y) && newTableSquares[0].length > (indexCol + x)) {
-              console.log("square en ", indexRow + y, indexCol + x)
               newTableSquares[indexRow + y][indexCol + x] = true
             }
           })
@@ -119,7 +119,7 @@ export const CreateFigure = () => {
       event.preventDefault()
 
       if (activeFigure.current) {
-        setPreviewSquares(falseSquares.current)
+        resetPreview()
         insertFigure(activeFigure.current, y, x)
       }
 
@@ -130,13 +130,12 @@ export const CreateFigure = () => {
       event.preventDefault()
       if (activeFigure.current) {
         insertPreview(activeFigure.current, y, x)
-        
       }
     }
 
     const handleDragLeave = (event: React.DragEvent) => {
       event.preventDefault()
-      setPreviewSquares(falseSquares.current)
+      resetPreview()
       console.log("Leave")
 
     }
@@ -238,7 +237,10 @@ export const CreateFigure = () => {
     setSquares(falseSquares.current)
   }
 
-
+  const resetPreview = () => {
+    setPreviewSquares(falseSquares.current)
+    lastPreviewPosition.current = {x: null, y:null}
+  }
 
 
 
